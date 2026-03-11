@@ -42,6 +42,10 @@ new class extends Component {
     public string $newPrice = '';
     public string $newStatus = 'available';
 
+    // Lot details modal
+    public bool $showLotDetailsModal = false;
+    public array $viewingLotProps = [];
+
     public function mount(): void
     {
         $this->name        = $this->empreendimento->name;
@@ -182,6 +186,25 @@ new class extends Component {
             ->update(['geometry' => null]);
 
         $this->dispatch('geometry-cleared', lotId: $lotId);
+    }
+
+    public function openLotDetailsModal(int $lotId): void
+    {
+        $lot = Lot::where('id', $lotId)
+            ->where('empreendimento_id', $this->empreendimento->id)
+            ->firstOrFail();
+
+        $this->viewingLotProps = [
+            'id'    => $lot->id,
+            'code'  => $lot->code,
+            'block' => $lot->block,
+            'price' => (float) $lot->price,
+            'label' => $lot->status->label(),
+            'color' => $lot->status->color(),
+            'area'  => $lot->area_sqm,
+        ];
+
+        $this->showLotDetailsModal = true;
     }
 
     public function assignDrawnPolygon(): void
@@ -584,6 +607,15 @@ new class extends Component {
                     </flux:text>
                 </div>
             @else
+                <div class="flex flex-wrap gap-3 text-sm">
+                    @foreach (App\Enums\LotStatus::cases() as $lotStatus)
+                        <div class="flex items-center gap-1.5">
+                            <span class="inline-block w-3 h-3 rounded-sm" style="background: {{ match($lotStatus->color()) { 'green' => '#22c55e', 'yellow' => '#eab308', 'red' => '#ef4444', default => '#6b7280' } }}"></span>
+                            <span class="text-zinc-600 dark:text-zinc-400">{{ $lotStatus->label() }}</span>
+                        </div>
+                    @endforeach
+                </div>
+
                 <div
                     id="lot-map"
                     wire:ignore
@@ -598,15 +630,6 @@ new class extends Component {
                     data-image-width="{{ $empreendimento->map_image_width ?? 0 }}"
                     data-image-height="{{ $empreendimento->map_image_height ?? 0 }}"
                 ></div>
-
-                <div class="flex flex-wrap gap-3 text-sm">
-                    @foreach (App\Enums\LotStatus::cases() as $lotStatus)
-                        <div class="flex items-center gap-1.5">
-                            <span class="inline-block w-3 h-3 rounded-sm" style="background: {{ match($lotStatus->color()) { 'green' => '#22c55e', 'yellow' => '#eab308', 'red' => '#ef4444', default => '#6b7280' } }}"></span>
-                            <span class="text-zinc-600 dark:text-zinc-400">{{ $lotStatus->label() }}</span>
-                        </div>
-                    @endforeach
-                </div>
             @endif
         </div>
     </div>
@@ -630,6 +653,65 @@ new class extends Component {
                 <flux:button type="submit" variant="primary">{{ __('Link') }}</flux:button>
             </div>
         </form>
+    </flux:modal>
+
+    {{-- Modal: lot details --}}
+    <flux:modal wire:model.self="showLotDetailsModal" class="min-w-xl" flyout>
+        @if (!empty($viewingLotProps))
+            <div class="space-y-4">
+                <div class="flex items-start justify-between gap-4">
+                    <flux:heading size="lg">
+                        {{ __('Lot') }} {{ $viewingLotProps['code'] }}
+                        @if ($viewingLotProps['block'])
+                            &mdash; {{ __('Block') }} {{ $viewingLotProps['block'] }}
+                        @endif
+                    </flux:heading>
+                    <flux:badge :color="$viewingLotProps['color']" size="sm">{{ $viewingLotProps['label'] }}</flux:badge>
+                </div>
+
+                <flux:separator />
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <flux:text class="text-xs text-zinc-500 mb-0.5">{{ __('Price') }}</flux:text>
+                        <flux:text class="font-medium">R$ {{ number_format($viewingLotProps['price'], 2, ',', '.') }}</flux:text>
+                    </div>
+                    @if ($viewingLotProps['area'])
+                        <div>
+                            <flux:text class="text-xs text-zinc-500 mb-0.5">{{ __('Area (m²)') }}</flux:text>
+                            <flux:text class="font-medium">{{ number_format($viewingLotProps['area'], 2) }}</flux:text>
+                        </div>
+                    @endif
+                </div>
+
+                <flux:separator />
+
+                <div class="flex items-center justify-between gap-2">
+                    <flux:button
+                        variant="danger"
+                        size="sm"
+                        icon="trash"
+                        wire:click="clearGeometry({{ $viewingLotProps['id'] }})"
+                        wire:confirm="{{ __('Remove geometry from this lot?') }}"
+                    >
+                        {{ __('Remove geometry') }}
+                    </flux:button>
+                    <div class="flex gap-2">
+                        <flux:modal.close>
+                            <flux:button variant="ghost">{{ __('Close') }}</flux:button>
+                        </flux:modal.close>
+                        <flux:button
+                            :href="route('lots.show', $viewingLotProps['id'])"
+                            wire:navigate
+                            variant="primary"
+                            icon="arrow-top-right-on-square"
+                        >
+                            {{ __('View details') }}
+                        </flux:button>
+                    </div>
+                </div>
+            </div>
+        @endif
     </flux:modal>
 
     {{-- Modal: assign drawn polygon --}}
@@ -686,7 +768,7 @@ new class extends Component {
 
     function lotStyle(status) {
         const color = STATUS_COLORS[status] ?? '#6b7280';
-        return { color, weight: 2, fillColor: color, fillOpacity: 0.35 };
+        return { color, weight: 2, fillColor: color, fillOpacity: 0.5 };
     }
 
     // ── Map init ──────────────────────────────────────────────────────────
@@ -728,25 +810,12 @@ new class extends Component {
     // ── Layer storage: lotId → layer ──────────────────────────────────────
     const lotLayers = {};
 
-    function makePopup(props) {
-        const price = props.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-        return `<div style="font-size:13px;min-width:160px">
-            <p style="font-weight:600;margin:0 0 4px">${props.code}${props.block ? ' — Block ' + props.block : ''}</p>
-            <p style="margin:0 0 6px">${props.label} · ${price}</p>
-            <button onclick="lotMapShowDetails(${props.id})" style="color:#3b82f6;font-size:11px;background:none;border:none;cursor:pointer;padding:0;text-decoration:underline">
-                View details
-            </button>
-            <button onclick="lotMapClearGeometry(${props.id})" style="color:#ef4444;font-size:11px;background:none;border:none;cursor:pointer;padding:0;text-decoration:underline">
-                Remove geometry
-            </button>
-        </div>`;
-    }
-
     function addLotLayer(feature) {
         const props = feature.properties;
         const layer = L.geoJSON(feature, {
             style: lotStyle(props.status),
-        }).bindPopup(makePopup(props)).addTo(map);
+        }).addTo(map);
+        layer.on('click', () => $wire.call('openLotDetailsModal', props.id));
         layer._lotId = props.id;
         lotLayers[props.id] = layer;
         return layer;
@@ -795,19 +864,6 @@ new class extends Component {
         });
     });
 
-    // ── Global helper for popup button ────────────────────────────────────
-    window.lotMapClearGeometry = function (lotId) {
-        if (confirm('Remove geometry from this lot?')) {
-            $wire.call('clearGeometry', lotId);
-        }
-    };
-
-    window.lotMapShowDetails = function (lotId) {
-        const layer = lotLayers[lotId];
-        if (layer) layer.closePopup();
-        window.open(`{{ url('lots') }}/${lotId}`, '_blank');
-    };
-
     // ── Livewire events ───────────────────────────────────────────────────
     $wire.on('geometry-saved', ({ lotId }) => {
         if (lotLayers[lotId]) map.removeLayer(lotLayers[lotId]);
@@ -817,6 +873,7 @@ new class extends Component {
     $wire.on('geometry-cleared', ({ lotId }) => {
         if (lotLayers[lotId]) map.removeLayer(lotLayers[lotId]);
         delete lotLayers[lotId];
+        $wire.set('showLotDetailsModal', false);
     });
 
     $wire.on('lots-updated', () => {
