@@ -781,18 +781,38 @@ new class extends Component {
     const imgH      = parseInt(mapEl.dataset.imageHeight) || 800;
 
     let map;
+    let imageBounds = null;
+
+    function fitImageMapToViewport() {
+        if (mapType !== 'image' || !imageBounds) {
+            return;
+        }
+
+        const containerH = mapEl.offsetHeight;
+        const containerW = mapEl.offsetWidth;
+
+        if (!containerH || !containerW) {
+            return;
+        }
+
+        map.invalidateSize();
+        map.fitBounds(imageBounds, {
+            animate: false,
+            padding: [24, 24],
+        });
+    }
 
     if (mapType === 'image' && imageUrl) {
         // ── Modo imagem: Leaflet com CRS.Simple ───────────────────────
         map = L.map('lot-map', {
             crs: L.CRS.Simple,
-            minZoom: -3,
-            maxZoom: 4,
+            minZoom: -5,
+            maxZoom: 8,
         });
 
-        const bounds = [[0, 0], [imgH, imgW]];
-        L.imageOverlay(imageUrl, bounds).addTo(map);
-        map.fitBounds(bounds);
+        imageBounds = [[0, 0], [imgH, imgW]];
+        L.imageOverlay(imageUrl, imageBounds).addTo(map);
+        requestAnimationFrame(() => fitImageMapToViewport());
     } else {
         // ── Geographic map mode: OSM tiles ───────────────────────────
         const lat  = parseFloat(mapEl.dataset.lat);
@@ -895,7 +915,19 @@ new class extends Component {
 
     // ── Fix map size when map tab is activated ────────────────────────────
     window.addEventListener('map-tab-activated', () => {
-        setTimeout(() => map.invalidateSize(), 50);
+        setTimeout(() => {
+            map.invalidateSize();
+
+            if (mapType === 'image') {
+                fitImageMapToViewport();
+            }
+        }, 50);
+    });
+
+    window.addEventListener('resize', () => {
+        if (mapType === 'image') {
+            fitImageMapToViewport();
+        }
     });
 })();
 </script>
