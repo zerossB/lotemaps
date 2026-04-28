@@ -830,8 +830,41 @@ new class extends Component {
         }).addTo(map);
     }
 
-    // ── Layer storage: lotId → layer ──────────────────────────────────────
-    const lotLayers = {};
+    // ── Layer storage: lotId → polygon layer / label marker ───────────────
+    const lotLayers   = {};
+    const labelLayers = {};
+
+    // Returns [lat, lng] centroid of a Polygon or Rectangle geometry
+    function calcCentroid(geometry) {
+        let coords = null;
+        if (geometry.type === 'Polygon') {
+            coords = geometry.coordinates[0];
+        } else if (geometry.type === 'MultiPolygon') {
+            coords = geometry.coordinates[0][0];
+        }
+        if (!coords || coords.length === 0) { return null; }
+        let sumLng = 0, sumLat = 0;
+        for (const [lng, lat] of coords) { sumLng += lng; sumLat += lat; }
+        return [sumLat / coords.length, sumLng / coords.length];
+    }
+
+    // Place a badge label at the centroid of the feature's geometry
+    function addLotLabel(feature) {
+        const props    = feature.properties;
+        const centroid = calcCentroid(feature.geometry);
+        if (!centroid) { return; }
+
+        const color = STATUS_COLORS[props.status] ?? '#6b7280';
+        const icon  = L.divIcon({
+            className: '',
+            html: `<div style="background:${color};color:#fff;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.4);pointer-events:none;line-height:1.6">${props.code}</div>`,
+            iconSize:   null,
+            iconAnchor: null,
+        });
+
+        const marker = L.marker(centroid, { icon, interactive: false, keyboard: false }).addTo(map);
+        labelLayers[props.id] = marker;
+    }
 
     function addLotLayer(feature) {
         const props = feature.properties;
@@ -841,6 +874,7 @@ new class extends Component {
         layer.on('click', () => $wire.call('openLotDetailsModal', props.id));
         layer._lotId = props.id;
         lotLayers[props.id] = layer;
+        addLotLabel(feature);
         return layer;
     }
 
@@ -889,13 +923,17 @@ new class extends Component {
 
     // ── Livewire events ───────────────────────────────────────────────────
     $wire.on('geometry-saved', ({ lotId }) => {
-        if (lotLayers[lotId]) map.removeLayer(lotLayers[lotId]);
+        if (lotLayers[lotId])   map.removeLayer(lotLayers[lotId]);
+        if (labelLayers[lotId]) map.removeLayer(labelLayers[lotId]);
         delete lotLayers[lotId];
+        delete labelLayers[lotId];
     });
 
     $wire.on('geometry-cleared', ({ lotId }) => {
-        if (lotLayers[lotId]) map.removeLayer(lotLayers[lotId]);
+        if (lotLayers[lotId])   map.removeLayer(lotLayers[lotId]);
+        if (labelLayers[lotId]) map.removeLayer(labelLayers[lotId]);
         delete lotLayers[lotId];
+        delete labelLayers[lotId];
         $wire.set('showLotDetailsModal', false);
     });
 
@@ -904,7 +942,9 @@ new class extends Component {
             $wire.call('getLotsGeoJsonProperty').then(data => {
                 if (!data || !data.features) return;
                 Object.values(lotLayers).forEach(l => map.removeLayer(l));
+                Object.values(labelLayers).forEach(l => map.removeLayer(l));
                 Object.keys(lotLayers).forEach(k => delete lotLayers[k]);
+                Object.keys(labelLayers).forEach(k => delete labelLayers[k]);
                 data.features.forEach(addLotLayer);
             }).catch(() => {});
         }, 300);
