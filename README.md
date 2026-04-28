@@ -8,18 +8,20 @@ LoteMaps is a web application for managing real estate developments, lots, clien
 
 ## MVP Features
 
-- **Developments** — Registration of developments with geographic location, map image, and total area.
-- **Lots** — Management of lots by development, with block, area, price, geometry, and status (available, reserved, sold, etc.).
+- **Developments (Empreendimentos)** — Registration of developments with geographic location, map image, coordinates, and total area. Status: Active / Inactive.
+- **Lots** — Management of lots per development, with code, block, area (m²), price, geometry, and status (Available, Reserved, Sold).
 - **Clients** — Registration of clients with contact information and document details.
 - **Proposals** — Creation of sales proposals linking clients to one or more lots, with status control, validity, and notes.
-- **Authentication** — Login, registration, email verification, and profile management via Laravel Fortify. ---
+- **Authentication** — Login, registration, email verification, and profile management via Laravel Fortify.
+
+---
 
 ## Stack
 
 | Layer | Technology |
-|--------------|--------------------------------|
-| Backend | PHP 8.4 + Laravel 12 |
-| Frontend | Livewire 4 + Flux UI + Alpine.js |
+|---|---|
+| Backend | PHP 8.4 + Laravel 13 |
+| Frontend | Livewire 4 + Flux UI 2 + Alpine.js |
 | Styles | Tailwind CSS v4 |
 | Authentication | Laravel Fortify |
 | Testing | Pest 4 |
@@ -27,7 +29,17 @@ LoteMaps is a web application for managing real estate developments, lots, clien
 
 ---
 
-## Installation
+## Quick Setup
+
+```bash
+composer run setup
+```
+
+This single command installs dependencies, sets up your `.env`, generates an app key, runs migrations, installs JS packages, and compiles assets.
+
+---
+
+## Manual Installation
 
 ```bash
 # 1. Clone the repository
@@ -49,7 +61,6 @@ php artisan migrate --seed
 
 # 6. Compile assets
 npm run build
-
 ```
 
 ---
@@ -57,9 +68,8 @@ npm run build
 ## Development
 
 ```bash
-# Start all services (server, queue, vite)
+# Start all services (server, queue, vite) concurrently
 composer run dev
-
 ```
 
 ---
@@ -68,16 +78,24 @@ composer run dev
 
 ```bash
 php artisan test --compact
+```
 
+---
+
+## Code Style
+
+```bash
+# Auto-fix code style with Pint
+composer run lint
 ```
 
 ---
 
 ## MVP Limitations
 
-Because it is an MVP, the following Features that are **not yet implemented**:
+The following features are **not yet implemented**:
 
-- Interactive map visualization with plot geometry
+- Interactive map visualization with lot geometry overlay
 - Reports and data export
 - Permission management and multiple user profiles
 - Integration with external systems (CRM, ERP)
