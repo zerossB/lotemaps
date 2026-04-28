@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Client;
+use Flux\Flux;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -36,11 +37,15 @@ new #[Title('Clients')] class extends Component {
 
         $this->reset('name', 'email', 'phone', 'document', 'notes', 'showCreateModal');
         $this->resetPage();
+
+        Flux::toast(variant: 'success', text: __('Client created.'));
     }
 
     public function deleteClient(int $clientId): void
     {
         Client::findOrFail($clientId)->delete();
+
+        Flux::toast(variant: 'success', text: __('Client deleted.'));
     }
 }; ?>
 

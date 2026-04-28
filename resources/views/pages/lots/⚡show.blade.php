@@ -3,6 +3,7 @@
 use App\Enums\LotStatus;
 use App\Models\Empreendimento;
 use App\Models\Lot;
+use Flux\Flux;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
@@ -50,7 +51,7 @@ new class extends Component {
             'status'      => $validated['status'],
         ]);
 
-        $this->dispatch('lot-updated');
+        Flux::toast(variant: 'success', heading: __('Lot updated.'), text: __('Changes saved.'));
     }
 
     public function render(): \Illuminate\View\View
@@ -112,7 +113,6 @@ new class extends Component {
 
                         <div class="flex items-center gap-4">
                             <flux:button type="submit" variant="primary">{{ __('Save Changes') }}</flux:button>
-                            <x-action-message on="lot-updated">{{ __('Saved.') }}</x-action-message>
                         </div>
                     </form>
                 </flux:card>

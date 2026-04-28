@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Client;
+use Flux\Flux;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
@@ -34,7 +35,7 @@ new class extends Component {
 
         $this->client->update($validated);
 
-        $this->dispatch('client-updated');
+        Flux::toast(variant: 'success', heading: __('Client updated.'), text: __('Changes saved.'));
     }
 
     public function render(): \Illuminate\View\View
@@ -66,7 +67,6 @@ new class extends Component {
 
                         <div class="flex items-center gap-4">
                             <flux:button type="submit" variant="primary">{{ __('Save Changes') }}</flux:button>
-                            <x-action-message on="client-updated">{{ __('Saved.') }}</x-action-message>
                         </div>
                     </form>
                 </flux:card>

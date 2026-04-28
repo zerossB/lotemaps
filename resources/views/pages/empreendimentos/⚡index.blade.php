@@ -2,6 +2,7 @@
 
 use App\Enums\EmpreendimentoStatus;
 use App\Models\Empreendimento;
+use Flux\Flux;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -56,11 +57,15 @@ new #[Title('Developments')] class extends Component {
         $this->reset('name', 'description', 'address', 'city', 'state', 'totalArea', 'showCreateModal');
         $this->status = 'active';
         $this->resetPage();
+
+        Flux::toast(variant: 'success', text: __('Development created.'));
     }
 
     public function deleteEmpreendimento(int $id): void
     {
         Empreendimento::findOrFail($id)->delete();
+
+        Flux::toast(variant: 'success', text: __('Development deleted.'));
     }
 }; ?>
 

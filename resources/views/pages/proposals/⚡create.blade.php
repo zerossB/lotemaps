@@ -4,6 +4,7 @@ use App\Enums\ProposalStatus;
 use App\Models\Client;
 use App\Models\Lot;
 use App\Models\Proposal;
+use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -66,6 +67,8 @@ new #[Title('New Proposal')] class extends Component {
         )->all();
 
         $proposal->lots()->attach($pivotData);
+
+        Flux::toast(variant: 'success', text: __('Proposal created.'));
 
         $this->redirect(route('proposals.show', $proposal), navigate: true);
     }

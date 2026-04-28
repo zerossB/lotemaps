@@ -3,6 +3,7 @@
 use App\Enums\LotStatus;
 use App\Models\Empreendimento;
 use App\Models\Lot;
+use Flux\Flux;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -63,11 +64,15 @@ new #[Title('Lots')] class extends Component {
         $this->reset('code', 'block', 'description', 'areaSqm', 'price', 'empreendimentoId', 'showCreateModal');
         $this->status = 'available';
         $this->resetPage();
+
+        Flux::toast(variant: 'success', text: __('Lot created.'));
     }
 
     public function deleteLot(int $lotId): void
     {
         Lot::findOrFail($lotId)->delete();
+
+        Flux::toast(variant: 'success', text: __('Lot deleted.'));
     }
 }; ?>
 

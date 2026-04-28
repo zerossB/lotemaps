@@ -1,6 +1,7 @@
 <?php
 
 use App\Concerns\PasswordValidationRules;
+use Flux\Flux;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Title;
@@ -35,7 +36,7 @@ new #[Title('Password settings')] class extends Component {
 
         $this->reset('current_password', 'password', 'password_confirmation');
 
-        $this->dispatch('password-updated');
+        Flux::toast(variant: 'success', heading: __('Password updated.'), text: __('Your password has been changed.'));
     }
 }; ?>
 
@@ -74,10 +75,6 @@ new #[Title('Password settings')] class extends Component {
                         {{ __('Save') }}
                     </flux:button>
                 </div>
-
-                <x-action-message class="me-3" on="password-updated">
-                    {{ __('Saved.') }}
-                </x-action-message>
             </div>
         </form>
     </x-pages::settings.layout>

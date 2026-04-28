@@ -129,8 +129,7 @@ test('can update proposal notes', function () {
     Livewire::test('pages::proposals.show', ['proposal' => $proposal])
         ->set('notes', 'Updated notes')
         ->call('updateProposal')
-        ->assertHasNoErrors()
-        ->assertDispatched('proposal-updated');
+        ->assertHasNoErrors();
 
     expect($proposal->fresh()->notes)->toBe('Updated notes');
 });

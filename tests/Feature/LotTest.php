@@ -49,8 +49,7 @@ test('can update a lot', function () {
     Livewire::test('pages::lots.show', ['lot' => $lot])
         ->set('price', '200000')
         ->call('updateLot')
-        ->assertHasNoErrors()
-        ->assertDispatched('lot-updated');
+        ->assertHasNoErrors();
 
     expect((float) $lot->fresh()->price)->toBe(200000.0);
 });

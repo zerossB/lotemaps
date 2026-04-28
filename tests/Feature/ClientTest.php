@@ -45,8 +45,7 @@ test('can update a client', function () {
     Livewire::test('pages::clients.show', ['client' => $client])
         ->set('name', 'New Name')
         ->call('updateClient')
-        ->assertHasNoErrors()
-        ->assertDispatched('client-updated');
+        ->assertHasNoErrors();
 
     expect($client->fresh()->name)->toBe('New Name');
 });

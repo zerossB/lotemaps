@@ -4,6 +4,7 @@ use App\Enums\EmpreendimentoStatus;
 use App\Enums\LotStatus;
 use App\Models\Empreendimento;
 use App\Models\Lot;
+use Flux\Flux;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -81,6 +82,8 @@ new class extends Component {
         ]);
 
         $this->dispatch('empreendimento-updated');
+
+        Flux::toast(variant: 'success', heading: __('Development updated.'), text: __('Changes saved.'));
     }
 
     public function saveMapType(): void
@@ -91,6 +94,8 @@ new class extends Component {
 
         $this->empreendimento->update(['map_type' => $this->mapType]);
         $this->dispatch('map-type-saved');
+
+        Flux::toast(variant: 'success', text: __('Map mode saved.'));
     }
 
     public function uploadMapImage(): void
@@ -124,6 +129,8 @@ new class extends Component {
         $this->mapImageUpload = null;
 
         $this->dispatch('map-image-saved');
+
+        Flux::toast(variant: 'success', text: __('Map image uploaded.'));
     }
 
     public function removeMapImage(): void
@@ -361,7 +368,6 @@ new class extends Component {
                         </flux:select>
                         <div class="flex items-center gap-4">
                             <flux:button type="submit" variant="primary">{{ __('Save Changes') }}</flux:button>
-                            <x-action-message on="empreendimento-updated">{{ __('Saved.') }}</x-action-message>
                         </div>
                     </form>
                 </flux:card>
@@ -382,7 +388,6 @@ new class extends Component {
                                 <flux:button wire:click="saveMapType" variant="primary" size="sm">
                                     {{ __('Save mode') }}
                                 </flux:button>
-                                <x-action-message on="map-type-saved">{{ __('Mode saved.') }}</x-action-message>
                             </div>
                         @endif
 
@@ -454,7 +459,6 @@ new class extends Component {
                                             <span wire:loading.remove wire:target="uploadMapImage">{{ __('Upload image') }}</span>
                                             <span wire:loading wire:target="uploadMapImage">{{ __('Uploading...') }}</span>
                                         </flux:button>
-                                        <x-action-message on="map-image-saved">{{ __('Image saved!') }}</x-action-message>
                                     </div>
                                 @endif
 

@@ -2,6 +2,7 @@
 
 use App\Enums\ProposalStatus;
 use App\Models\Proposal;
+use Flux\Flux;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
@@ -29,7 +30,7 @@ new class extends Component {
             'expires_at' => $this->expiresAt ?: null,
         ]);
 
-        $this->dispatch('proposal-updated');
+        Flux::toast(variant: 'success', heading: __('Proposal updated.'), text: __('Changes saved.'));
     }
 
     public function transitionStatus(string $newStatus): void
@@ -48,6 +49,7 @@ new class extends Component {
     public function deleteProposal(): void
     {
         $this->proposal->delete();
+        Flux::toast(variant: 'success', text: __('Proposal deleted.'));
         $this->redirect(route('proposals.index'), navigate: true);
     }
 
@@ -138,7 +140,6 @@ new class extends Component {
 
                         <div class="flex items-center gap-4">
                             <flux:button type="submit" variant="primary">{{ __('Save') }}</flux:button>
-                            <x-action-message on="proposal-updated">{{ __('Saved.') }}</x-action-message>
                         </div>
                     </form>
                 </flux:card>
