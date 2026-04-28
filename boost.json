@@ -2,19 +2,21 @@
     "agents": [
         "copilot"
     ],
+    "cloud": false,
     "guidelines": true,
-    "herd_mcp": true,
     "mcp": true,
-    "nightwatch_mcp": false,
+    "nightwatch": false,
     "packages": [
-        "laravel/fortify"
+        "livewire/blaze"
     ],
     "sail": false,
     "skills": [
+        "fortify-development",
+        "laravel-best-practices",
         "fluxui-development",
         "livewire-development",
         "pest-testing",
         "tailwindcss-development",
-        "developing-with-fortify"
+        "blaze-optimize"
     ]
 }
