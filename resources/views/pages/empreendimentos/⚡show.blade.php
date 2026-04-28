@@ -804,13 +804,16 @@ new class extends Component {
 
     if (mapType === 'image' && imageUrl) {
         // ── Modo imagem: Leaflet com CRS.Simple ───────────────────────
+        imageBounds = [[0, 0], [imgH, imgW]];
+
         map = L.map('lot-map', {
             crs: L.CRS.Simple,
-            minZoom: -5,
+            minZoom: 0,
             maxZoom: 8,
+            maxBounds: imageBounds,
+            maxBoundsViscosity: 1.0,
         });
 
-        imageBounds = [[0, 0], [imgH, imgW]];
         L.imageOverlay(imageUrl, imageBounds).addTo(map);
         requestAnimationFrame(() => fitImageMapToViewport());
     } else {
